@@ -42,7 +42,7 @@ const ItemsList = ({
     localStorage.setItem(
       `share-the-pie-session-${sessionId}`,
       JSON.stringify({
-        myCheckedItems: items,
+        myCheckedItems: items.map(({ checkedBy, ...rest }) => rest),
       })
     );
   };
@@ -53,6 +53,57 @@ const ItemsList = ({
         ? appState.receiptData.items
         : []
     );
+    const readFromLocalStorage = () => {
+      const localStorageItems = localStorage.getItem(
+        `share-the-pie-session-${sessionId}`
+      );
+      if (localStorageItems) {
+        return JSON.parse(localStorageItems).myCheckedItems;
+      }
+    };
+
+    const localStorageItems = readFromLocalStorage();
+    setLocalStorageItems(localStorageItems);
+    if (localStorageItems) {
+      socket.emit("setItemsChecked", {
+        sessionId,
+        itemIds: localStorageItems.map((item) => item.id),
+        socketIds: localStorageItems.map((localItem) => {
+          const matchingItem = items.find((item) => item.id === localItem.id);
+          if (matchingItem && matchingItem.checkedBy.length > 0) {
+            return [...matchingItem.checkedBy, socketId];
+          } else {
+            return [socketId];
+          }
+        }),
+      });
+
+      console.log({
+        sessionId,
+        itemIds: localStorageItems.map((item) => item.id),
+        socketIds: localStorageItems.map((localItem) => {
+          const matchingItem = items.find((item) => item.id === localItem.id);
+          if (matchingItem && matchingItem.checkedBy.length > 0) {
+            return [...matchingItem.checkedBy, socketId];
+          } else {
+            return [socketId];
+          }
+        }),
+      });
+
+      // const updatedItems = items.map((item) => {
+      //   if (localStorageItems.includes(item.id)) {
+      //     item.checkedBy = [...item.checkedBy, socketId];
+      //     item.isCheckedByMe = true;
+
+      //     // onMyCheckedItemsChange((myCheckedItems) => [...myCheckedItems, item]);
+
+      //     return item;
+      //   }
+      // });
+
+      // setItems(updatedItems);
+    }
   }, [appState]);
 
   useEffect(() => {
@@ -220,36 +271,11 @@ const ItemsList = ({
     }
   }, [myCheckedItems, calculateSubtotals, manualTipAmount]);
 
-  useEffect(() => {
-    const readFromLocalStorage = () => {
-      const localStorageItems = localStorage.getItem(
-        `share-the-pie-session-${sessionId}`
-      );
-      if (localStorageItems) {
-        return JSON.parse(localStorageItems).myCheckedItems;
-      }
-    };
-
-    const localStorageItems = readFromLocalStorage();
-    setLocalStorageItems(localStorageItems);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return isConnected ? (
     <Items>
       <Instructions>{socketId}</Instructions>
       {items &&
         items.map((item, index) => {
-          if (localStorageItems) {
-            const itemIsInLocalStorage = localStorageItems.find(
-              (localStorageItem) => localStorageItem.id === item.id
-            );
-            if (itemIsInLocalStorage) {
-              item.checkedBy = [...item.checkedBy, socketId];
-              item.isCheckedByMe = true;
-            }
-          }
-
           return (
             <Item
               key={item.id}
