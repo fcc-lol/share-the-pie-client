@@ -8,7 +8,7 @@ function chooseServer() {
     // server.api = "https://api.sharethepie.app";
   } else {
     server.socket = "wss://share-the-pie-server.fcc.lol:3110";
-    server.api = "https://api.share-the-pie.fcc.lol";
+    server.api = "https://share-the-pie-server.fcc.lol";
   }
 
   return server;
