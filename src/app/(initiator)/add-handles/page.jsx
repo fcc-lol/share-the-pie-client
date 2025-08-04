@@ -32,6 +32,12 @@ const AddHandles = () => {
     }, motion.delayToShowContainer);
   }, []);
 
+  useEffect(() => {
+    if (appState.sessionId == null) {
+      router.push("/capture-receipt");
+    }
+  }, [appState.sessionId, router]);
+
   const cleanInitiatorData = (key, value) => {
     let cleanedValue = value;
 
@@ -48,7 +54,7 @@ const AddHandles = () => {
     {};
 
   const [initiatorData, setInitiatorData] = useState({
-    sessionId: appState.sessionId,
+    sessionId: appState.sessionId || null,
     cashTag:
       initialInitatorData && initialInitatorData.cashTag
         ? initialInitatorData.cashTag
@@ -56,7 +62,7 @@ const AddHandles = () => {
     venmoHandle:
       initialInitatorData && initialInitatorData.venmoHandle
         ? initialInitatorData.venmoHandle
-        : "",
+        : ""
   });
 
   const handleChange = (e) => {
@@ -80,7 +86,7 @@ const AddHandles = () => {
       "initiatorData",
       JSON.stringify({
         cashTag: cleanedInitiatorData.cashTag,
-        venmoHandle: cleanedInitiatorData.venmoHandle,
+        venmoHandle: cleanedInitiatorData.venmoHandle
       })
     );
 
@@ -88,9 +94,9 @@ const AddHandles = () => {
       const response = await fetch(`${server.api}/setInitiatorData`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(cleanedInitiatorData),
+        body: JSON.stringify(cleanedInitiatorData)
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

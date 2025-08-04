@@ -114,7 +114,7 @@ const QrPage = () => {
         const response = await fetch(`${server.api}/getReceiptData`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
+          body: JSON.stringify({ sessionId })
         });
 
         if (!response.ok) {
@@ -135,7 +135,7 @@ const QrPage = () => {
         const response = await fetch(`${server.api}/generateQrCode`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
+          body: JSON.stringify({ sessionId })
         });
 
         if (!response.ok) {
@@ -150,14 +150,16 @@ const QrPage = () => {
       }
     };
 
-    getReceiptData(appState.sessionId);
-    getQrCode(appState.sessionId);
+    // Only make API calls if sessionId exists
+    if (appState.sessionId) {
+      getReceiptData(appState.sessionId);
+      getQrCode(appState.sessionId);
+      socket.emit("startSession", { sessionId: appState.sessionId });
+    }
 
     socket.on("connect", () => {
       setIsConnected(true);
     });
-
-    socket.emit("startSession", { sessionId: appState.sessionId });
   }, []);
 
   const handleSessionMembersChanged = (sessionMembers) => {
@@ -189,15 +191,15 @@ const QrPage = () => {
     try {
       socket.emit("tipAmountChanged", {
         sessionId,
-        tip,
+        tip
       });
 
       const response = await fetch(`${server.api}/setTipAmount`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ sessionId, tip }),
+        body: JSON.stringify({ sessionId, tip })
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

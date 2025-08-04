@@ -89,11 +89,11 @@ const Camera = () => {
       const response = await fetch(`${server.api}/parseReceiptImage`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          image: imageData,
-        }),
+          image: imageData
+        })
       });
 
       if (!response.ok) {
@@ -114,14 +114,14 @@ const Camera = () => {
       ? {
           facingMode: { exact: "environment" },
           width: { ideal: 3264 / 2 },
-          height: { ideal: 2448 / 2 },
+          height: { ideal: 2448 / 2 }
         }
       : true;
 
     navigator.mediaDevices
       .getUserMedia({
         video: videoObj,
-        audio: false,
+        audio: false
       })
       .then((stream) => {
         let video = videoRef.current;
@@ -170,6 +170,7 @@ const Camera = () => {
   useEffect(() => {
     const hasSessionId =
       (typeof window !== "undefined" &&
+        localStorage.getItem("appState") &&
         JSON.parse(localStorage.getItem("appState")).sessionId) ||
       false;
 

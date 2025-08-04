@@ -70,7 +70,7 @@ const ShowItemsList = () => {
         const response = await fetch(`${server.api}/getReceiptData`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
+          body: JSON.stringify({ sessionId })
         });
 
         if (response && !response.ok) {
@@ -84,14 +84,17 @@ const ShowItemsList = () => {
       }
     };
 
-    getReceiptData(sessionId);
+    // Only fetch receipt data if sessionId exists
+    if (sessionId) {
+      getReceiptData(sessionId);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [mySubTotals, setMySubtotals] = useState({
     myItems: 0,
     myTip: 0,
-    myTax: 0,
+    myTax: 0
   });
 
   const handleSetMySubtotals = (newMySubtotals) => {
@@ -125,14 +128,14 @@ const ShowItemsList = () => {
             label: "Venmo",
             prefix: "@",
             color: "#008cff",
-            value: appState.receiptData.initiator.venmoHandle,
+            value: appState.receiptData.initiator.venmoHandle
           },
           {
             label: "Cash App",
             prefix: "$",
             color: "#00d64f",
-            value: appState.receiptData.initiator.cashTag,
-          },
+            value: appState.receiptData.initiator.cashTag
+          }
         ].filter((handle) => handle.value !== "")
       );
     }
