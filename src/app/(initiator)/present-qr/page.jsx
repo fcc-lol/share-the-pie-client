@@ -150,16 +150,33 @@ const QrPage = () => {
       }
     };
 
+    const startSession = () => {
+      if (appState.sessionId) {
+        socket.emit("startSession", { sessionId: appState.sessionId });
+      }
+    };
+
     // Only make API calls if sessionId exists
     if (appState.sessionId) {
       getReceiptData(appState.sessionId);
       getQrCode(appState.sessionId);
-      socket.emit("startSession", { sessionId: appState.sessionId });
     }
 
-    socket.on("connect", () => {
+    const handleConnect = () => {
       setIsConnected(true);
-    });
+      // Re-claim creator status on every (re)connect, so a restarted server
+      // re-learns the host under the new socket id.
+      startSession();
+    };
+
+    socket.on("connect", handleConnect);
+
+    // Fire immediately too, in case the socket is already connected on mount.
+    if (socket.connected) startSession();
+
+    return () => {
+      socket.off("connect", handleConnect);
+    };
   }, []);
 
   const handleSessionMembersChanged = (sessionMembers) => {

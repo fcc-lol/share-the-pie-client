@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { useAppContext } from "../AppContext";
 import styled from "styled-components";
 import Instructions from "@/app/components/instructions";
@@ -24,7 +24,6 @@ const ItemsList = ({
   sessionId,
   onSubtotalsChange,
   onMyCheckedItemsChange,
-  myCheckedItems,
   onSessionMembersChanged,
 }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -36,44 +35,70 @@ const ItemsList = ({
 
   const receiptData = appState.receiptData ? appState.receiptData : {};
 
+  // Single source of truth: the items I've checked is whatever the synced
+  // `items` list says includes my socketId. No parallel copy to drift out of sync.
+  const myCheckedItems = useMemo(
+    () => items.filter((item) => item.checkedBy.includes(socketId)),
+    [items, socketId]
+  );
+
+  const saveToLocalStorage = (items) => {
+    localStorage.setItem(
+      `share-the-pie-session-${sessionId}`,
+      JSON.stringify({
+        myCheckedItems: items.map(({ checkedBy, ...rest }) => rest),
+      })
+    );
+  };
+
   useEffect(() => {
     setItems(
       appState.receiptData && appState.receiptData.items
         ? appState.receiptData.items
         : []
     );
+
+    // Re-claim my previous selections under this connection's socket.id. The
+    // server $addToSets them atomically, so just send the item ids.
+    const stored = localStorage.getItem(`share-the-pie-session-${sessionId}`);
+    if (stored) {
+      const myStoredItems = JSON.parse(stored).myCheckedItems || [];
+      if (myStoredItems.length > 0) {
+        socket.emit("setItemsChecked", {
+          sessionId,
+          itemIds: myStoredItems.map((item) => item.id),
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appState]);
 
   useEffect(() => {
-    socket.on("connect", () => {
+    const handleConnect = () => {
       setIsConnected(true);
       setSocketId(socket.id);
-    });
-
-    socket.on("itemsStatusChanged", (data) => {
-      setItems((items) =>
-        items.map((item) => {
-          return item.id === data.itemId
-            ? { ...item, checkedBy: data.checkedBy }
-            : item;
-        })
-      );
-
-      if (myCheckedItems) {
-        let newMyCheckedItems = myCheckedItems.map((myCheckedItem) =>
-          myCheckedItem.id === data.itemId
-            ? { ...myCheckedItem, checkedBy: data.checkedBy }
-            : myCheckedItem
-        );
-        calculateSubtotals(newMyCheckedItems, manualTipAmount);
+      // Re-announce on every (re)connect so a restarted server re-learns this
+      // member under the new socket id, instead of leaving them orphaned.
+      if (sessionId) {
+        socket.emit("newConnection", { sessionId, joinedFrom });
       }
-    });
+    };
 
-    socket.on("tipAmountChanged", (data) => {
+    const handleItemsStatusChanged = (data) => {
+      setItems((items) =>
+        items.map((item) =>
+          item.id === data.itemId
+            ? { ...item, checkedBy: data.checkedBy }
+            : item
+        )
+      );
+    };
+
+    const handleTipAmountChanged = (data) => {
       setManualTipAmount(data.tip);
-    });
+    };
 
-    socket.on("sessionMembersChanged", (data) => {
+    const handleSessionMembersChanged = (data) => {
       setSessionMembers(data.sessionMembers);
       onSessionMembersChanged(data.sessionMembers);
       if (data.memberLeft) {
@@ -90,14 +115,18 @@ const ItemsList = ({
           )
         );
       }
-    });
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("itemsStatusChanged", handleItemsStatusChanged);
+    socket.on("tipAmountChanged", handleTipAmountChanged);
+    socket.on("sessionMembersChanged", handleSessionMembersChanged);
 
     return () => {
-      socket.off("connect");
-      socket.off("itemsStatusChanged");
-      socket.off("sessionMembersChanged");
-      socket.off("tipAmountChanged");
-      socket.off("disconnect");
+      socket.off("connect", handleConnect);
+      socket.off("itemsStatusChanged", handleItemsStatusChanged);
+      socket.off("tipAmountChanged", handleTipAmountChanged);
+      socket.off("sessionMembersChanged", handleSessionMembersChanged);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSessionMembersChanged]);
@@ -111,55 +140,31 @@ const ItemsList = ({
   }, [sessionId, joinedFrom]);
 
   const handleItemClick = (itemId) => {
-    const updatedItems = items.map((item) => {
-      if (item.id === itemId) {
-        if (item.checkedBy.length > 0) {
-          if (item.checkedBy.includes(socketId)) {
-            socket.emit("setItemUnchecked", {
-              sessionId,
-              itemId,
-              socketIds: item.checkedBy,
-              mySocketId: socketId,
-            });
-            item.isCheckedByMe = false;
+    const item = items.find((i) => i.id === itemId);
+    if (!item) return;
 
-            onMyCheckedItemsChange(
-              myCheckedItems.filter(
-                (myCheckedItem) => myCheckedItem.id !== itemId
-              )
-            );
-          } else {
-            socket.emit("setItemChecked", {
-              sessionId,
-              itemId,
-              socketIds: [...item.checkedBy, socketId],
-            });
-            item.checkedBy = [...item.checkedBy, socketId];
-            item.isCheckedByMe = true;
+    const checkedByMe = item.checkedBy.includes(socketId);
 
-            onMyCheckedItemsChange((myCheckedItems) => [
-              ...myCheckedItems,
-              item,
-            ]);
+    // Optimistically update only my own membership in the shared array, then let
+    // the server's authoritative broadcast reconcile. Everything downstream
+    // (myCheckedItems, subtotals, the checkbox) derives from `items`.
+    const nextItems = items.map((i) =>
+      i.id === itemId
+        ? {
+            ...i,
+            checkedBy: checkedByMe
+              ? i.checkedBy.filter((id) => id !== socketId)
+              : [...i.checkedBy, socketId],
           }
-        } else {
-          socket.emit("setItemChecked", {
-            sessionId,
-            itemId,
-            socketIds: [...item.checkedBy, socketId],
-          });
-          item.checkedBy = [...item.checkedBy, socketId];
-          item.isCheckedByMe = true;
+        : i
+    );
+    setItems(nextItems);
+    saveToLocalStorage(nextItems.filter((i) => i.checkedBy.includes(socketId)));
 
-          onMyCheckedItemsChange((myCheckedItems) => [...myCheckedItems, item]);
-        }
-        return item;
-      } else {
-        return item;
-      }
+    socket.emit(checkedByMe ? "setItemUnchecked" : "setItemChecked", {
+      sessionId,
+      itemId,
     });
-
-    setItems(updatedItems);
   };
 
   const calculateSubtotals = useCallback(
@@ -196,25 +201,32 @@ const ItemsList = ({
     [receiptData]
   );
 
+  // The one and only recompute path. Whenever the synced items, my socket, or
+  // the tip change, derive subtotals and propagate my selection upward exactly
+  // once — no competing handler to flash a stale value first. (localStorage is
+  // written on click, not here, so the initial empty render can't wipe it.)
   useEffect(() => {
-    if (myCheckedItems) {
-      calculateSubtotals(myCheckedItems, manualTipAmount);
-    }
-  }, [myCheckedItems, calculateSubtotals, manualTipAmount]);
+    calculateSubtotals(myCheckedItems, manualTipAmount);
+    onMyCheckedItemsChange(myCheckedItems);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myCheckedItems, manualTipAmount, calculateSubtotals]);
 
   return isConnected ? (
     <Items>
+      <Instructions>{socketId}</Instructions>
       {items &&
-        items.map((item, index) => (
-          <Item
-            key={item.id}
-            item={item}
-            mySocketId={socketId}
-            handleClick={() => {
-              handleItemClick(item.id);
-            }}
-          />
-        ))}
+        items.map((item, index) => {
+          return (
+            <Item
+              key={item.id}
+              item={item}
+              mySocketId={socketId}
+              handleClick={() => {
+                handleItemClick(item.id);
+              }}
+            />
+          );
+        })}
     </Items>
   ) : (
     <Instructions>Please wait...</Instructions>
