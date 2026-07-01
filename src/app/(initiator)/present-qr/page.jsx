@@ -13,6 +13,7 @@ import Instructions from "@/app/components/instructions";
 import Card from "@/app/components/card";
 import FormField from "@/app/components/formField";
 import SessionMembersIndicator from "@/app/components/sessionMembersIndicator";
+import BalancesBreakdown from "@/app/components/balancesBreakdown";
 import Gap from "@/app/components/gap";
 import { debounce } from "lodash";
 import socket from "@/app/socket";
@@ -200,6 +201,8 @@ const QrPage = () => {
     setMyCheckedItems(newMyCheckedItems);
   };
 
+  const [balances, setBalances] = useState(null);
+
   const handleClearAppState = () => {
     setAppState({ sessionId: null });
   };
@@ -357,6 +360,17 @@ const QrPage = () => {
                 <Gap />
               </>
             )}
+            {balances && (
+              <>
+                <Instructions>Who owes what</Instructions>
+                <BalancesBreakdown
+                  participants={balances.participants}
+                  payerAmount={balances.payerAmount}
+                  grandTotal={balances.grandTotal}
+                />
+                <Gap />
+              </>
+            )}
             <Instructions>Select the items that you ordered</Instructions>
             <ItemsList
               joinedFrom="present-qr"
@@ -365,6 +379,7 @@ const QrPage = () => {
               onMyCheckedItemsChange={handleSetMyCheckedItems}
               myCheckedItems={myCheckedItems}
               onSessionMembersChanged={handleSessionMembersChanged}
+              onBalancesChange={setBalances}
             />
             <Gap />
             <Button

@@ -25,6 +25,7 @@ const ItemsList = ({
   onSubtotalsChange,
   onMyCheckedItemsChange,
   onSessionMembersChanged,
+  onBalancesChange,
 }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [sessionMembers, setSessionMembers] = useState([]);
@@ -210,6 +211,45 @@ const ItemsList = ({
     onMyCheckedItemsChange(myCheckedItems);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myCheckedItems, manualTipAmount, calculateSubtotals]);
+
+  // Per-person balances for the payer's view: each connected participant owes
+  // their claimed items (split by how many share each) plus a proportional cut
+  // of tip and tax; the payer covers whatever's left (total minus everyone
+  // else — i.e. their own picks plus anything unclaimed).
+  useEffect(() => {
+    if (!onBalancesChange || !receiptData || !receiptData.transaction) return;
+
+    const subtotal = receiptData.transaction.items;
+    const tax = receiptData.transaction.tax || 0;
+    const tip =
+      manualTipAmount !== undefined
+        ? parseFloat(manualTipAmount) || 0
+        : receiptData.transaction.tip || 0;
+    const grandTotal = subtotal + tax + tip;
+
+    const shareForSocketId = (socketId) => {
+      let claimedItems = 0;
+      items.forEach((item) => {
+        if (item.checkedBy.includes(socketId)) {
+          claimedItems += item.price / item.checkedBy.length;
+        }
+      });
+      const ratio = subtotal ? claimedItems / subtotal : 0;
+      return claimedItems + ratio * tip + ratio * tax;
+    };
+
+    const participants = sessionMembers
+      .filter((member) => !member.isSessionCreator)
+      .map((member) => ({ id: member.id, amount: shareForSocketId(member.id) }));
+    const claimed = participants.reduce((acc, p) => acc + p.amount, 0);
+
+    onBalancesChange({
+      participants,
+      payerAmount: grandTotal - claimed,
+      grandTotal,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, sessionMembers, manualTipAmount, receiptData]);
 
   return isConnected ? (
     <Items>
