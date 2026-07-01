@@ -152,9 +152,9 @@ const GearIcon = () => (
 );
 
 const PARSING_MODES = [
+  { value: "VERYFI", label: "Veryfi" },
   { value: "CLAUDE", label: "Claude" },
   { value: "GPT", label: "GPT" },
-  { value: "VERYFI", label: "Veryfi" },
   { value: "SAMPLE", label: "Sample" }
 ];
 
@@ -311,7 +311,6 @@ const Camera = () => {
                 onClick={() => handleSelectParsingMode(mode.value)}
               >
                 {mode.label}
-                {parsingMode === mode.value && <span>✓</span>}
               </SettingsOption>
             ))}
           </SettingsMenu>
