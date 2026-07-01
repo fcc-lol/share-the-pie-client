@@ -360,17 +360,6 @@ const QrPage = () => {
                 <Gap />
               </>
             )}
-            {balances && (
-              <>
-                <Instructions>Who owes what</Instructions>
-                <BalancesBreakdown
-                  participants={balances.participants}
-                  payerAmount={balances.payerAmount}
-                  grandTotal={balances.grandTotal}
-                />
-                <Gap />
-              </>
-            )}
             <Instructions>Select the items that you ordered</Instructions>
             <ItemsList
               joinedFrom="present-qr"
@@ -382,6 +371,17 @@ const QrPage = () => {
               onBalancesChange={setBalances}
             />
             <Gap />
+            {balances && (
+              <>
+                <Instructions>Who owes what</Instructions>
+                <BalancesBreakdown
+                  participants={balances.participants}
+                  payerAmount={balances.payerAmount}
+                  grandTotal={balances.grandTotal}
+                />
+                <Gap />
+              </>
+            )}
             <Button
               onClick={handleClearAppState}
               $size="large"

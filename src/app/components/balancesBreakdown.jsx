@@ -42,15 +42,6 @@ const Amount = styled.div`
     props.$muted ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 1)"};
 `;
 
-const Divider = styled.div`
-  height: 1px;
-  background: rgba(255, 255, 255, 0.125);
-`;
-
-const PayerRow = styled(Row)`
-  font-weight: 600;
-`;
-
 const BalancesBreakdown = ({
   participants = [],
   payerAmount = 0,
@@ -75,13 +66,12 @@ const BalancesBreakdown = ({
           </Row>
         ))
       )}
-      <Divider />
-      <PayerRow>
-        <Person>You (remaining)</Person>
+      <Row>
+        <Person>You</Person>
         <Amount>
           <FormattedPrice value={payerAmount} />
         </Amount>
-      </PayerRow>
+      </Row>
       <Row>
         <Person $muted>Total</Person>
         <Amount $muted>

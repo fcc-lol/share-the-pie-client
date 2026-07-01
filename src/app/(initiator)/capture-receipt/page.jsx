@@ -81,6 +81,12 @@ const SettingsButton = styled.button`
   background: transparent;
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
+  outline: none;
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+  }
 
   &:active {
     opacity: 0.75;
@@ -89,7 +95,7 @@ const SettingsButton = styled.button`
 
 const SettingsMenu = styled.div`
   position: absolute;
-  top: 3.75rem;
+  top: 4.5rem;
   right: 1rem;
   z-index: 10;
   display: flex;
@@ -97,7 +103,7 @@ const SettingsMenu = styled.div`
   gap: 0.25rem;
   padding: 0.5rem;
   min-width: 11rem;
-  border-radius: 1rem;
+  border-radius: ${(props) => props.theme.surfaceBorderRadius};
   background: #1c1c1c;
   border: 1px solid rgba(255, 255, 255, 0.125);
 `;
