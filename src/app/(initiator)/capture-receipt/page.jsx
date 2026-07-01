@@ -78,7 +78,7 @@ const SettingsButton = styled.button`
   justify-content: center;
   border: none;
   border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.125);
+  background: transparent;
   color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
 
