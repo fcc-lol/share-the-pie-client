@@ -123,7 +123,13 @@ const QrPage = () => {
         }
 
         const data = await response.json();
-        setTipAmount(data.transaction.tip);
+        // Format to 2 decimals so the text field keeps trailing zeros
+        // (the DB stores tip as a number, e.g. 12.4, not "12.40").
+        setTipAmount(
+          data.transaction.tip != null
+            ? Number(data.transaction.tip).toFixed(2)
+            : null
+        );
         setIsManualTipAmount(data.isManualTipAmount);
         setAppState((prevAppState) => ({ ...prevAppState, receiptData: data }));
       } catch (error) {
