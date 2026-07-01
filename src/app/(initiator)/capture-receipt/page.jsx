@@ -96,7 +96,7 @@ const SettingsButton = styled.button`
 const SettingsMenu = styled.div`
   position: absolute;
   top: 5rem;
-  right: 0.5rem;
+  right: 1.5rem;
   z-index: 10;
   display: flex;
   flex-direction: column;
