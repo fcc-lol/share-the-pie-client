@@ -49,23 +49,17 @@ const BalancesBreakdown = ({
 }) => {
   return (
     <Wrapper>
-      {participants.length === 0 ? (
-        <Row>
-          <Person $muted>No one has claimed items yet</Person>
+      {participants.map((participant, index) => (
+        <Row key={participant.id}>
+          <Person>
+            <Dot />
+            Person {index + 1}
+          </Person>
+          <Amount>
+            <FormattedPrice value={participant.amount} />
+          </Amount>
         </Row>
-      ) : (
-        participants.map((participant, index) => (
-          <Row key={participant.id}>
-            <Person>
-              <Dot />
-              Person {index + 1}
-            </Person>
-            <Amount>
-              <FormattedPrice value={participant.amount} />
-            </Amount>
-          </Row>
-        ))
-      )}
+      ))}
       <Row>
         <Person>You</Person>
         <Amount>

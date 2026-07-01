@@ -95,17 +95,17 @@ const SettingsButton = styled.button`
 
 const SettingsMenu = styled.div`
   position: absolute;
-  top: 4.5rem;
-  right: 1rem;
+  top: 5rem;
+  right: 0.5rem;
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.5rem;
   min-width: 11rem;
-  border-radius: ${(props) => props.theme.surfaceBorderRadius};
+  border-radius: ${(props) =>
+    `calc(${props.theme.surfaceBorderRadius} - 0.5rem)`};
   background: #1c1c1c;
-  border: 1px solid rgba(255, 255, 255, 0.125);
 `;
 
 const SettingsOption = styled.button`
@@ -115,7 +115,8 @@ const SettingsOption = styled.button`
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: ${(props) =>
+    `calc(${props.theme.surfaceBorderRadius} - 1rem)`};
   background: ${(props) =>
     props.$isSelected ? "rgba(255, 255, 255, 0.125)" : "transparent"};
   color: ${(props) =>
