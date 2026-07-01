@@ -2,7 +2,9 @@ import React from "react";
 import styled from "styled-components";
 import useDetectStandaloneMode from "@/app/hooks/useDetectStandaloneMode";
 import TopOverflowMask from "@/app/components/topOverflowMask";
-import BottomOverflowMask from "@/app/components/bottomOverflowMask";
+// Bottom overflow mask is disabled (kept, not deleted). To re-enable, restore
+// this import and uncomment the render below.
+// import BottomOverflowMask from "@/app/components/bottomOverflowMask";
 
 const StyledContainer = styled.div`
   display: flex;
@@ -40,7 +42,9 @@ const Container = ({ isVisible, isFixedHeight, children, ...rest }) => {
     >
       <TopOverflowMask />
       {children}
-      {(isStandalone || !isFixedHeight) && <BottomOverflowMask />}
+      {/* Bottom overflow mask disabled — kept, not deleted. To re-enable,
+          restore the import above and uncomment the line below. */}
+      {/* {(isStandalone || !isFixedHeight) && <BottomOverflowMask />} */}
     </StyledContainer>
   );
 };
