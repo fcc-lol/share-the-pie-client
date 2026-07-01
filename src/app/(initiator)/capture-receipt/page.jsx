@@ -66,6 +66,98 @@ const CameraPreview = styled.video`
   z-index: 1;
 `;
 
+const SettingsButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.125);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.75;
+  }
+`;
+
+const SettingsMenu = styled.div`
+  position: absolute;
+  top: 3.75rem;
+  right: 1rem;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  min-width: 11rem;
+  border-radius: 1rem;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+`;
+
+const SettingsMenuLabel = styled.div`
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem 0.375rem 0.5rem;
+`;
+
+const SettingsOption = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: ${(props) =>
+    props.$isSelected ? "rgba(255, 255, 255, 0.125)" : "transparent"};
+  color: ${(props) =>
+    props.$isSelected ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.6)"};
+  font-size: 1rem;
+  font-weight: ${(props) => (props.$isSelected ? 600 : 400)};
+  text-align: left;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.75;
+  }
+`;
+
+const GearIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+      stroke="currentColor"
+      strokeWidth="1.75"
+    />
+    <path
+      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+      stroke="currentColor"
+      strokeWidth="1.75"
+    />
+  </svg>
+);
+
+const PARSING_MODES = [
+  { value: "CLAUDE", label: "Claude" },
+  { value: "GPT", label: "GPT" },
+  { value: "VERYFI", label: "Veryfi" },
+  { value: "SAMPLE", label: "Sample" }
+];
+
 const Camera = () => {
   const server = chooseServer();
   const { isMobile } = useDetectDevice();
@@ -75,6 +167,15 @@ const Camera = () => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [isContainerReady, setIsContainerReady] = useState(false);
   const [isContainerVisible, setIsContainerVisible] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Effective parsing mode; unset means "use the server default".
+  const parsingMode = appState.parsingMode || "VERYFI";
+
+  const handleSelectParsingMode = (mode) => {
+    setAppState((prev) => ({ ...prev, parsingMode: mode }));
+    setShowSettings(false);
+  };
 
   useEffect(() => {
     setIsContainerReady(true);
@@ -92,7 +193,10 @@ const Camera = () => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          image: imageData
+          image: imageData,
+          ...(appState.parsingMode
+            ? { parsingMode: appState.parsingMode }
+            : {})
         })
       });
 
@@ -156,7 +260,7 @@ const Camera = () => {
       try {
         let data = await uploadDocument(imageData);
         setIsContainerVisible(false);
-        setAppState({ sessionId: data.sessionId });
+        setAppState((prev) => ({ ...prev, sessionId: data.sessionId }));
         setTimeout(() => {
           video.srcObject.getTracks()[0].stop();
           router.push("/add-handles");
@@ -189,6 +293,29 @@ const Camera = () => {
   return (
     isContainerReady && (
       <Container isFixedHeight={true} isVisible={isContainerVisible}>
+        <SettingsButton
+          type="button"
+          onClick={() => setShowSettings((open) => !open)}
+          aria-label="Receipt parsing settings"
+        >
+          <GearIcon />
+        </SettingsButton>
+        {showSettings && (
+          <SettingsMenu>
+            <SettingsMenuLabel>Receipt parser</SettingsMenuLabel>
+            {PARSING_MODES.map((mode) => (
+              <SettingsOption
+                key={mode.value}
+                type="button"
+                $isSelected={parsingMode === mode.value}
+                onClick={() => handleSelectParsingMode(mode.value)}
+              >
+                {mode.label}
+                {parsingMode === mode.value && <span>✓</span>}
+              </SettingsOption>
+            ))}
+          </SettingsMenu>
+        )}
         <Instructions>{instructionText}</Instructions>
         {isUploading && (
           <SpinnerContainer $isOpticallyCentered={true}>
