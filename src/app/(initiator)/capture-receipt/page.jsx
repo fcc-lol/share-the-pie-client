@@ -102,12 +102,6 @@ const SettingsMenu = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.125);
 `;
 
-const SettingsMenuLabel = styled.div`
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem 0.375rem 0.5rem;
-`;
-
 const SettingsOption = styled.button`
   display: flex;
   align-items: center;
@@ -154,7 +148,6 @@ const GearIcon = () => (
 const PARSING_MODES = [
   { value: "VERYFI", label: "Veryfi" },
   { value: "CLAUDE", label: "Claude" },
-  { value: "GPT", label: "GPT" },
   { value: "SAMPLE", label: "Sample" }
 ];
 
@@ -302,7 +295,6 @@ const Camera = () => {
         </SettingsButton>
         {showSettings && (
           <SettingsMenu>
-            <SettingsMenuLabel>Receipt parser</SettingsMenuLabel>
             {PARSING_MODES.map((mode) => (
               <SettingsOption
                 key={mode.value}

@@ -253,7 +253,6 @@ const ItemsList = ({
 
   return isConnected ? (
     <Items>
-      <Instructions>{socketId}</Instructions>
       {items &&
         items.map((item, index) => {
           return (
