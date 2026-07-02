@@ -39,8 +39,9 @@ const StyledButton = styled.button`
   ${(props) =>
     props.$isDestructive === true &&
     `
-      color: #fff;
-      background: red;
+      color: red;
+      background: #000;
+      border: 2px solid red;
     `};
 
   transition-property: opacity, transform;

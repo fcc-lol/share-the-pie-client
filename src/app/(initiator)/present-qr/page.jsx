@@ -412,13 +412,12 @@ const QrPage = () => {
             >
               {isLocked ? "Unlock totals" : "Lock totals"}
             </Button>
-            <Gap />
             <Button
               onClick={handleClearAppState}
               $size="large"
               $isDestructive={true}
             >
-              Stop sharing
+              Reset session
             </Button>
             <Gap />
           </Container>
