@@ -81,11 +81,21 @@ const ItemsList = ({
   useEffect(() => {
     const handleConnect = () => {
       setIsConnected(true);
-      setSocketId(socket.id);
-      // Re-announce on every (re)connect so a restarted server re-learns this
-      // member under the new socket id, instead of leaving them orphaned.
+      const newId = socket.id;
+      setSocketId(newId);
       if (sessionId) {
+        // Re-announce on every (re)connect so a restarted server re-learns this
+        // member under the new socket id, instead of leaving them orphaned.
         socket.emit("newConnection", { sessionId, joinedFrom });
+
+        // Move my previous connection's checked items onto this new socket id
+        // so switching apps (e.g. to Venmo) doesn't drop them from the split.
+        const lastSocketKey = `share-the-pie-lastsocket-${sessionId}`;
+        const previousSocketId = localStorage.getItem(lastSocketKey);
+        if (previousSocketId && previousSocketId !== newId) {
+          socket.emit("reclaimItems", { sessionId, previousSocketId });
+        }
+        localStorage.setItem(lastSocketKey, newId);
       }
     };
 
@@ -110,20 +120,8 @@ const ItemsList = ({
     const handleSessionMembersChanged = (data) => {
       setSessionMembers(data.sessionMembers);
       onSessionMembersChanged(data.sessionMembers);
-      if (data.memberLeft) {
-        setItems((items) =>
-          items.map((item) =>
-            item.checkedBy.includes(data.memberLeft)
-              ? {
-                  ...item,
-                  checkedBy: item.checkedBy.filter(
-                    (socketId) => socketId !== data.memberLeft
-                  ),
-                }
-              : item
-          )
-        );
-      }
+      // Note: a member's checked items are intentionally kept when they
+      // disconnect, so leaving doesn't change everyone else's split.
     };
 
     socket.on("connect", handleConnect);
