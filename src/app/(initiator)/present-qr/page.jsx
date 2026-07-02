@@ -417,7 +417,7 @@ const QrPage = () => {
               $size="large"
               $isDestructive={true}
             >
-              Reset session
+              Reset
             </Button>
             <Gap />
           </Container>
