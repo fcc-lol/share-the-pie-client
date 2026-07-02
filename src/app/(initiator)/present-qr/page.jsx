@@ -404,7 +404,12 @@ const QrPage = () => {
                 <Gap />
               </>
             )}
-            <Button onClick={handleToggleLock} $size="large">
+            <Button
+              onClick={handleToggleLock}
+              $size="large"
+              $backgroundColor={isLocked ? "rgb(75, 75, 75)" : undefined}
+              $textColor={isLocked ? "#fff" : undefined}
+            >
               {isLocked ? "Unlock totals" : "Lock totals"}
             </Button>
             <Gap />
