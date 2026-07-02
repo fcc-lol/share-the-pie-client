@@ -53,10 +53,6 @@ const PaymentButtons = styled.div`
   display: flex;
   flex-direction: row;
   gap: 1rem;
-
-  button:disabled {
-    opacity: 0.5;
-  }
 `;
 
 const ShowItemsList = () => {
