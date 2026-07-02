@@ -49,6 +49,16 @@ const TotalLabel = styled.div`
   font-weight: 600;
 `;
 
+const PaymentButtons = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+
+  button:disabled {
+    opacity: 0.5;
+  }
+`;
+
 const ShowItemsList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -223,22 +233,29 @@ const ShowItemsList = () => {
                 </Row>
               </Shares>
             )}
-            {isLocked &&
-              handlesArray.map((handle, key) => (
-                <Button
-                  key={key}
-                  onClick={() =>
-                    handlePaymentButtonClick(handle, myCheckedItems)
-                  }
-                  $size="large"
-                  $backgroundColor={handle.color}
-                  $textColor="#fff"
-                  disabled={myTotal === 0}
-                >
-                  Pay {handle.prefix}
-                  {handle.value} on {handle.label}
-                </Button>
-              ))}
+            {handlesArray.length > 0 && (
+              <>
+                <Instructions>
+                  {isLocked ? "Settle up" : "Waiting for everyone to finish"}
+                </Instructions>
+                <PaymentButtons>
+                  {handlesArray.map((handle, key) => (
+                    <Button
+                      key={key}
+                      onClick={() =>
+                        handlePaymentButtonClick(handle, myCheckedItems)
+                      }
+                      $size="large"
+                      $backgroundColor={handle.color}
+                      $textColor="#fff"
+                      disabled={!isLocked || myTotal === 0}
+                    >
+                      {handle.label}
+                    </Button>
+                  ))}
+                </PaymentButtons>
+              </>
+            )}
             <Gap />
           </Container>
         )}
