@@ -193,7 +193,8 @@ const Camera = () => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          image: imageData,
+          // Sample mode never needs the photo — don't upload it at all
+          ...(appState.parsingMode === "SAMPLE" ? {} : { image: imageData }),
           ...(appState.parsingMode
             ? { parsingMode: appState.parsingMode }
             : {})
