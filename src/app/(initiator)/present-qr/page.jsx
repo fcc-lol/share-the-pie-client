@@ -97,6 +97,8 @@ const QrPage = () => {
   const [qrCode, setQrCode] = useState(null);
   const [tipAmount, setTipAmount] = useState(null);
   const [isManualTipAmount, setIsManualTipAmount] = useState(false);
+  // True when the receipt parser found a tip on the receipt itself
+  const [hasParsedTip, setHasParsedTip] = useState(false);
   const { appState, setAppState } = useAppContext();
   const server = chooseServer();
 
@@ -131,6 +133,9 @@ const QrPage = () => {
             : null
         );
         setIsManualTipAmount(data.isManualTipAmount);
+        setHasParsedTip(
+          !data.isManualTipAmount && Number(data.transaction.tip) > 0
+        );
         setAppState((prevAppState) => ({ ...prevAppState, receiptData: data }));
       } catch (error) {
         console.error("Error fetching receipt data:", error);
@@ -291,7 +296,9 @@ const QrPage = () => {
             <Gap />
             {(
               <>
-                <Instructions>Confirm tip amount</Instructions>
+                <Instructions>
+                  {hasParsedTip ? "Confirm tip amount" : "Record tip amount"}
+                </Instructions>
                 <FormFieldWithSuggestions>
                   <Suggestions>
                     <Suggestion

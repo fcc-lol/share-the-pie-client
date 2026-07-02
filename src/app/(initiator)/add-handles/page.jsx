@@ -27,9 +27,42 @@ const AddHandles = () => {
   useEffect(() => {
     setIsContainerReady(true);
 
+    // Skip this screen when usernames were already saved in a previous
+    // session — post them for this session and continue straight to the QR.
+    const stored =
+      (typeof window !== "undefined" &&
+        JSON.parse(localStorage.getItem("initiatorData"))) ||
+      {};
+    if (appState.sessionId && (stored.cashTag || stored.venmoHandle)) {
+      fetch(`${server.api}/setInitiatorData`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: appState.sessionId,
+          cashTag: stored.cashTag || "",
+          venmoHandle: stored.venmoHandle || ""
+        })
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          router.push("/present-qr");
+        })
+        .catch((error) => {
+          // Fall back to showing the form
+          console.error("Error auto-submitting usernames:", error);
+          setTimeout(() => {
+            setIsContainerVisible(true);
+          }, motion.delayToShowContainer);
+        });
+      return;
+    }
+
     setTimeout(() => {
       setIsContainerVisible(true);
     }, motion.delayToShowContainer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

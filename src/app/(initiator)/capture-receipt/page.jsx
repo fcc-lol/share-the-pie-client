@@ -244,6 +244,7 @@ const Camera = () => {
     const video = videoRef.current;
     video.pause();
 
+    setShowSettings(false);
     setIsUploading(true);
 
     setTimeout(async () => {
@@ -293,14 +294,16 @@ const Camera = () => {
   return (
     isContainerReady && (
       <Container isFixedHeight={true} isVisible={isContainerVisible}>
-        <SettingsButton
-          type="button"
-          onClick={() => setShowSettings((open) => !open)}
-          aria-label="Receipt parsing settings"
-        >
-          <GearIcon />
-        </SettingsButton>
-        {showSettings && (
+        {!isUploading && (
+          <SettingsButton
+            type="button"
+            onClick={() => setShowSettings((open) => !open)}
+            aria-label="Receipt parsing settings"
+          >
+            <GearIcon />
+          </SettingsButton>
+        )}
+        {showSettings && !isUploading && (
           <SettingsMenu>
             {PARSING_MODES.map((mode) => (
               <SettingsOption
