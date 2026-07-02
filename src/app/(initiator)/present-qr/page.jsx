@@ -208,6 +208,14 @@ const QrPage = () => {
   };
 
   const [balances, setBalances] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+
+  const handleToggleLock = () => {
+    socket.emit("setTotalsLocked", {
+      sessionId: appState.sessionId,
+      locked: !isLocked
+    });
+  };
 
   const handleClearAppState = () => {
     setAppState({ sessionId: null });
@@ -375,6 +383,7 @@ const QrPage = () => {
               myCheckedItems={myCheckedItems}
               onSessionMembersChanged={handleSessionMembersChanged}
               onBalancesChange={setBalances}
+              onLockChange={setIsLocked}
             />
             <Gap />
             {balances && (
@@ -388,6 +397,10 @@ const QrPage = () => {
                 <Gap />
               </>
             )}
+            <Button onClick={handleToggleLock} $size="large">
+              {isLocked ? "Unlock totals" : "Lock totals"}
+            </Button>
+            <Gap />
             <Button
               onClick={handleClearAppState}
               $size="large"

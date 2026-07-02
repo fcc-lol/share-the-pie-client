@@ -119,6 +119,7 @@ const ShowItemsList = () => {
   }, [mySubTotals, setMyTotal]);
 
   const [handlesArray, setHandlesArray] = useState([]);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     if (appState.receiptData && appState.receiptData.initiator) {
@@ -190,9 +191,10 @@ const ShowItemsList = () => {
               onMyCheckedItemsChange={handleSetMyCheckedItems}
               myCheckedItems={myCheckedItems}
               onSessionMembersChanged={() => {}}
+              onLockChange={setIsLocked}
             />
             <Gap />
-            <Instructions>Pay for your share</Instructions>
+            <Instructions>Your share</Instructions>
             {mySubTotals && (
               <Shares>
                 <Row>
@@ -221,19 +223,22 @@ const ShowItemsList = () => {
                 </Row>
               </Shares>
             )}
-            {handlesArray.map((handle, key) => (
-              <Button
-                key={key}
-                onClick={() => handlePaymentButtonClick(handle, myCheckedItems)}
-                $size="large"
-                $backgroundColor={handle.color}
-                $textColor="#fff"
-                disabled={myTotal === 0}
-              >
-                Pay {handle.prefix}
-                {handle.value} on {handle.label}
-              </Button>
-            ))}
+            {isLocked &&
+              handlesArray.map((handle, key) => (
+                <Button
+                  key={key}
+                  onClick={() =>
+                    handlePaymentButtonClick(handle, myCheckedItems)
+                  }
+                  $size="large"
+                  $backgroundColor={handle.color}
+                  $textColor="#fff"
+                  disabled={myTotal === 0}
+                >
+                  Pay {handle.prefix}
+                  {handle.value} on {handle.label}
+                </Button>
+              ))}
             <Gap />
           </Container>
         )}

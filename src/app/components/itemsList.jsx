@@ -26,6 +26,7 @@ const ItemsList = ({
   onMyCheckedItemsChange,
   onSessionMembersChanged,
   onBalancesChange,
+  onLockChange,
 }) => {
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [sessionMembers, setSessionMembers] = useState([]);
@@ -33,6 +34,7 @@ const ItemsList = ({
   const [items, setItems] = useState([]);
   const [manualTipAmount, setManualTipAmount] = useState();
   const [socketId, setSocketId] = useState(socket.id);
+  const [isLocked, setIsLocked] = useState(false);
 
   const receiptData = appState.receiptData ? appState.receiptData : {};
 
@@ -58,6 +60,8 @@ const ItemsList = ({
         ? appState.receiptData.items
         : []
     );
+
+    setIsLocked(!!(appState.receiptData && appState.receiptData.isLocked));
 
     // Re-claim my previous selections under this connection's socket.id. The
     // server $addToSets them atomically, so just send the item ids.
@@ -99,6 +103,10 @@ const ItemsList = ({
       setManualTipAmount(data.tip);
     };
 
+    const handleTotalsLocked = (data) => {
+      setIsLocked(data.locked);
+    };
+
     const handleSessionMembersChanged = (data) => {
       setSessionMembers(data.sessionMembers);
       onSessionMembersChanged(data.sessionMembers);
@@ -122,12 +130,14 @@ const ItemsList = ({
     socket.on("itemsStatusChanged", handleItemsStatusChanged);
     socket.on("tipAmountChanged", handleTipAmountChanged);
     socket.on("sessionMembersChanged", handleSessionMembersChanged);
+    socket.on("totalsLocked", handleTotalsLocked);
 
     return () => {
       socket.off("connect", handleConnect);
       socket.off("itemsStatusChanged", handleItemsStatusChanged);
       socket.off("tipAmountChanged", handleTipAmountChanged);
       socket.off("sessionMembersChanged", handleSessionMembersChanged);
+      socket.off("totalsLocked", handleTotalsLocked);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onSessionMembersChanged]);
@@ -140,7 +150,15 @@ const ItemsList = ({
       });
   }, [sessionId, joinedFrom]);
 
+  // Once the payer locks the totals, no one may edit their selections.
+  useEffect(() => {
+    if (onLockChange) onLockChange(isLocked);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLocked]);
+
   const handleItemClick = (itemId) => {
+    if (isLocked) return;
+
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
