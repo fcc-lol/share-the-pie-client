@@ -277,9 +277,21 @@ const QrPage = () => {
               />
             </Card>
             <Gap />
-            {(tipAmount == null || isManualTipAmount === true) && (
+            <Instructions>Select the items that you ordered</Instructions>
+            <ItemsList
+              joinedFrom="present-qr"
+              sessionId={appState.sessionId}
+              onSubtotalsChange={handleSetMySubtotals}
+              onMyCheckedItemsChange={handleSetMyCheckedItems}
+              myCheckedItems={myCheckedItems}
+              onSessionMembersChanged={handleSessionMembersChanged}
+              onBalancesChange={setBalances}
+              onLockChange={setIsLocked}
+            />
+            <Gap />
+            {(
               <>
-                <Instructions>Record tip amount</Instructions>
+                <Instructions>Confirm tip amount</Instructions>
                 <FormFieldWithSuggestions>
                   <Suggestions>
                     <Suggestion
@@ -374,18 +386,6 @@ const QrPage = () => {
                 <Gap />
               </>
             )}
-            <Instructions>Select the items that you ordered</Instructions>
-            <ItemsList
-              joinedFrom="present-qr"
-              sessionId={appState.sessionId}
-              onSubtotalsChange={handleSetMySubtotals}
-              onMyCheckedItemsChange={handleSetMyCheckedItems}
-              myCheckedItems={myCheckedItems}
-              onSessionMembersChanged={handleSessionMembersChanged}
-              onBalancesChange={setBalances}
-              onLockChange={setIsLocked}
-            />
-            <Gap />
             {balances && (
               <>
                 <Instructions>Who owes what</Instructions>
